@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ContactForm } from './ContactForm'
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const service = await getServiceBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const service = await getServiceBySlug(slug)
   if (!service) return { title: 'Not Found' }
   return { title: service.name, description: service.description }
 }
@@ -15,9 +16,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ServiceDetailPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const service = await getServiceBySlug(params.slug)
+  const { slug } = await params
+  const service = await getServiceBySlug(slug)
   
   if (!service) {
     // We render a fallback if not found instead of 404 for demonstration, 

@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { AddToCartBtn } from './AddToCartBtn'
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const product = await getProductBySlug(slug)
   if (!product) return { title: 'Not Found' }
   return { title: product.name, description: product.description }
 }
@@ -16,9 +17,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const product = await getProductBySlug(params.slug)
+  const { slug } = await params
+  const product = await getProductBySlug(slug)
   
   if (!product) {
     notFound()
