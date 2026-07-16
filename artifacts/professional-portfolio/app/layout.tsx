@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,21 +20,6 @@ export const metadata: Metadata = {
   },
   description:
     "haithammisape transforms businesses with AI automation, custom software, forex bots, and purpose-built computers. Your competitive edge, engineered.",
-  keywords: [
-    "AI agency",
-    "AI automation",
-    "custom computers",
-    "forex bots",
-    "n8n",
-    "business automation",
-    "SaaS development",
-    "server setup",
-  ],
-  openGraph: {
-    title: "haithammisape — AI Agency & Custom Tech",
-    description: "Transform your business with AI agents, custom software, and purpose-built machines.",
-    type: "website",
-  },
 };
 
 export default function RootLayout({
@@ -43,7 +29,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased bg-background text-foreground font-sans selection:bg-primary/30 selection:text-primary">
+        {children}
+        <Toaster 
+          position="bottom-right" 
+          toastOptions={{
+            style: {
+              background: '#0f172a',
+              color: '#f8fafc',
+              border: '1px solid #1e293b',
+              borderRadius: '2px',
+              fontFamily: 'var(--font-geist-mono)'
+            },
+            success: {
+              iconTheme: { primary: '#00f0ff', secondary: '#000000' }
+            }
+          }} 
+        />
+      </body>
     </html>
   );
 }

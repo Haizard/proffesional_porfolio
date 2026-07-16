@@ -9,9 +9,11 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
+    if (!supabase) { setLoading(false); return }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         setUser(session?.user ?? null)
@@ -35,7 +37,8 @@ export function useAuth() {
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    const supabase = createClient()
+    if (supabase) await supabase.auth.signOut()
   }
 
   return { user, profile, loading, isAdmin: profile?.role === 'admin', signOut }

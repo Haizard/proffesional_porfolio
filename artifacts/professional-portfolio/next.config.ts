@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**' },
     ],
   },
+  allowedDevOrigins: [
+    '*.replit.dev',
+    '*.janeway.replit.dev',
+    '*.repl.co',
+  ],
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3000', '*.replit.dev', '*.repl.co'],
