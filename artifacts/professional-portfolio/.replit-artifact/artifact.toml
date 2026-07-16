@@ -8,7 +8,7 @@ router = "path"
 [[services]]
 name = "web"
 paths = [ "/" ]
-localPort = 21834
+localPort = 3000
 
 [services.development]
 run = "pnpm --filter @workspace/professional-portfolio run dev"
@@ -18,4 +18,4 @@ build = [ "pnpm", "--filter", "@workspace/professional-portfolio", "run", "build
 run = "pnpm --filter @workspace/professional-portfolio run start"
 
 [services.env]
-PORT = "21834"
+PORT = "3000"
