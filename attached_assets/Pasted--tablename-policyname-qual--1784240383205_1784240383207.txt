@@ -1,0 +1,33 @@
+| tablename         | policyname                         | qual                                                                                                                          | with_check |
+| ----------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| blog_posts        | Anyone can view published posts    | (status = 'published'::text)                                                                                                  | null       |
+| blog_posts        | Admins can manage all posts        | (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))                | null       |
+| contact_inquiries | Admins can manage inquiries        | (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))                | null       |
+| contact_inquiries | Anyone can submit inquiries        | null                                                                                                                          | true       |
+| order_items       | Users can view their order items   | (EXISTS ( SELECT 1
+   FROM orders
+  WHERE ((orders.id = order_items.order_id) AND (orders.user_id = auth.uid()))))            | null       |
+| order_items       | Admins can manage all order items  | (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))                | null       |
+| orders            | Admins can manage all orders       | (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))                | null       |
+| orders            | Users can view their own orders    | (auth.uid() = user_id)                                                                                                        | null       |
+| products          | Anyone can view active products    | (is_active = true)                                                                                                            | null       |
+| products          | Admins can manage all products     | (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))                | null       |
+| profiles          | Admins can view all profiles       | (EXISTS ( SELECT 1
+   FROM profiles profiles_1
+  WHERE ((profiles_1.id = auth.uid()) AND (profiles_1.role = 'admin'::text)))) | null       |
+| profiles          | Users can update their own profile | (auth.uid() = id)                                                                                                             | null       |
+| profiles          | Users can view their own profile   | (auth.uid() = id)                                                                                                             | null       |
+| services          | Admins can manage services         | (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'admin'::text))))                | null       |
+| services          | Anyone can view services           | true                                                                                                                          | null       |
