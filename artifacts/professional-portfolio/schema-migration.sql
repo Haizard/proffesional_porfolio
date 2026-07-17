@@ -3,6 +3,34 @@
 -- Run this in your Supabase SQL Editor
 -- ============================================================
 
+-- ── Auto-create profile on signup ────────────────────────────
+-- Run this ONCE if you don't already have a profile trigger.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $
+BEGIN
+  INSERT INTO public.profiles (id, full_name, role)
+  VALUES (
+    new.id,
+    new.raw_user_meta_data->>'full_name',
+    'customer'
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ── Grant yourself admin access ───────────────────────────────
+-- After registering your account, run this (replace with your email):
+-- UPDATE public.profiles SET role = 'admin' WHERE id = (
+--   SELECT id FROM auth.users WHERE email = 'your@email.com'
+-- );
+-- ─────────────────────────────────────────────────────────────
+
 -- ── Categories (tree structure) ──────────────────────────────
 CREATE TABLE IF NOT EXISTS public.categories (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),

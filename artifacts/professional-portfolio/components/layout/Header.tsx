@@ -18,7 +18,7 @@ export function Header() {
     { href: '/services', label: 'Services' },
     { href: '/store', label: 'Store' },
     { href: '/projects', label: 'Projects' },
-    { href: '/blog', label: 'Intel' },
+    { href: '/blog', label: 'Blog' },
     { href: '/contact', label: 'Contact' },
   ]
 

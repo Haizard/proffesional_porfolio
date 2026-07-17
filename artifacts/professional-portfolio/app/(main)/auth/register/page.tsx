@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Terminal } from 'lucide-react'
+import { Terminal, Mail, CheckCircle2 } from 'lucide-react'
 
 const schema = z.object({
   full_name: z.string().min(2, 'Name is required'),
@@ -23,7 +23,7 @@ type FormData = z.infer<typeof schema>
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [registered, setRegistered] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const redirect = searchParams?.get('redirect') || '/account'
   const supabase = createClient()
@@ -35,26 +35,60 @@ export default function RegisterPage() {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
-          data: {
-            full_name: data.full_name,
-          }
-        }
+          data: { full_name: data.full_name },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
+        },
       })
 
       if (error) throw error
 
-      toast.success('Registration complete. System access granted.')
-      router.push(redirect)
-      router.refresh()
+      // If email confirmation is disabled in Supabase, user is immediately active
+      if (authData.session) {
+        toast.success('Account created. Welcome!')
+        window.location.href = redirect
+        return
+      }
+
+      // Email confirmation required
+      setRegistered(data.email)
     } catch (error: any) {
       toast.error(error.message || 'Registration failed.')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (registered) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center py-24 px-4">
+        <div className="w-full max-w-md bg-card border border-border p-8 rounded-sm shadow-2xl relative text-center">
+          <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
+          <div className="flex justify-center mb-6">
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <Mail className="h-7 w-7 text-primary" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold mb-3 font-mono uppercase">Check_Your_Email</h1>
+          <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
+            We sent a confirmation link to <span className="text-foreground font-mono">{registered}</span>.
+            Click it to activate your account, then come back and log in.
+          </p>
+          <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 border border-border rounded-sm p-3 text-left mb-6">
+            <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+            <span>Didn't receive it? Check spam, or try registering again with the same email.</span>
+          </div>
+          <Link href="/auth/login">
+            <Button className="w-full font-mono bg-primary text-black hover:bg-primary/90">
+              GO_TO_LOGIN
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
