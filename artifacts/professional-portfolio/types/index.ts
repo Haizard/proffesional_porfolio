@@ -128,6 +128,95 @@ export interface CartItem {
   quantity: number
 }
 
+// ── Categories ─────────────────────────────────────────────
+
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  parent_id: string | null
+  type: 'blog' | 'service' | 'product' | 'project' | 'general'
+  icon: string | null
+  color: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  children?: Category[]
+  parent?: Category | null
+}
+
+// ── Projects ───────────────────────────────────────────────
+
+export interface Project {
+  id: string
+  title: string
+  slug: string
+  description: string
+  long_description: string | null
+  featured_image: string | null
+  images: string[]
+  category_id: string | null
+  tags: string[]
+  tech_stack: string[]
+  is_free: boolean
+  price: number | null
+  preview_url: string | null
+  download_url: string | null
+  status: 'draft' | 'published'
+  is_featured: boolean
+  stripe_price_id: string | null
+  created_at: string
+  updated_at: string
+  category?: Category | null
+}
+
+export interface ProjectPurchase {
+  id: string
+  user_id: string
+  project_id: string
+  stripe_session_id: string | null
+  stripe_payment_intent_id: string | null
+  amount: number | null
+  status: 'pending' | 'paid' | 'failed'
+  created_at: string
+}
+
+// ── Comments ───────────────────────────────────────────────
+
+export type CommentEntityType = 'blog' | 'service' | 'product' | 'project'
+
+export interface Comment {
+  id: string
+  user_id: string
+  entity_type: CommentEntityType
+  entity_id: string
+  parent_id: string | null
+  content: string
+  is_pinned: boolean
+  is_edited: boolean
+  likes_count: number
+  dislikes_count: number
+  created_at: string
+  updated_at: string
+  author?: {
+    full_name: string | null
+    avatar_url: string | null
+  }
+  replies?: Comment[]
+  user_vote?: 'like' | 'dislike' | null
+}
+
+export interface CommentVote {
+  id: string
+  user_id: string
+  comment_id: string
+  vote_type: 'like' | 'dislike'
+  created_at: string
+}
+
+// ── Database ───────────────────────────────────────────────
+
 export interface Database {
   public: {
     Tables: {
@@ -138,6 +227,11 @@ export interface Database {
       order_items: { Row: OrderItem; Insert: Omit<OrderItem, 'id' | 'created_at'>; Update: Partial<Omit<OrderItem, 'id'>> }
       contact_inquiries: { Row: ContactInquiry; Insert: Omit<ContactInquiry, 'id' | 'created_at'>; Update: Partial<Omit<ContactInquiry, 'id'>> }
       profiles: { Row: Profile; Insert: Omit<Profile, 'created_at' | 'updated_at'>; Update: Partial<Omit<Profile, 'id'>> }
+      categories: { Row: Category; Insert: Omit<Category, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Omit<Category, 'id'>> }
+      projects: { Row: Project; Insert: Omit<Project, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Omit<Project, 'id'>> }
+      project_purchases: { Row: ProjectPurchase; Insert: Omit<ProjectPurchase, 'id' | 'created_at'>; Update: Partial<Omit<ProjectPurchase, 'id'>> }
+      comments: { Row: Comment; Insert: Omit<Comment, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Omit<Comment, 'id'>> }
+      comment_votes: { Row: CommentVote; Insert: Omit<CommentVote, 'id' | 'created_at'>; Update: Partial<Omit<CommentVote, 'id'>> }
     }
   }
 }

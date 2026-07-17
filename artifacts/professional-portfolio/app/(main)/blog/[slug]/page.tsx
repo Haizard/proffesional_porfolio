@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { getPostBySlug } from '@/lib/api'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
+import { CommentSection } from '@/components/comments/CommentSection'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -75,6 +76,8 @@ export default async function BlogPostPage({
             </div>
           )}
         </article>
+
+        <CommentSection entityType="blog" entityId={post.id} />
       </div>
     </div>
   )

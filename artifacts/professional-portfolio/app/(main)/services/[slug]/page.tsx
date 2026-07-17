@@ -5,6 +5,7 @@ import { getServiceBySlug } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ContactForm } from './ContactForm'
+import { CommentSection } from '@/components/comments/CommentSection'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -82,6 +83,8 @@ export default async function ServiceDetailPage({
             </div>
           </div>
         </div>
+
+        <CommentSection entityType="service" entityId={service.id} />
       </div>
     </div>
   )

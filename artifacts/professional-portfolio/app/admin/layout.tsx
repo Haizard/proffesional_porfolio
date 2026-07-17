@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Terminal, LayoutDashboard, Server, FileText, Cpu, Package, MessageSquare, LogOut } from 'lucide-react'
+import { Terminal, LayoutDashboard, Server, FileText, Cpu, Package, MessageSquare, LogOut, FolderTree, Code2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { Toaster } from 'react-hot-toast'
 
@@ -27,9 +27,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin', icon: LayoutDashboard, label: 'Overview' },
     { href: '/admin/services', icon: Server, label: 'Services' },
     { href: '/admin/products', icon: Cpu, label: 'Hardware' },
+    { href: '/admin/projects', icon: Code2, label: 'Projects' },
     { href: '/admin/orders', icon: Package, label: 'Orders' },
     { href: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
     { href: '/admin/blog', icon: FileText, label: 'Intel (Blog)' },
+    { href: '/admin/categories', icon: FolderTree, label: 'Categories' },
   ]
 
   return (

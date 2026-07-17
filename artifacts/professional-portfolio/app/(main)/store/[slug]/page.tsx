@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { AddToCartBtn } from './AddToCartBtn'
+import { CommentSection } from '@/components/comments/CommentSection'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -109,6 +110,8 @@ export default async function ProductDetailPage({
                 </div>
               </div>
             )}
+
+            <CommentSection entityType="product" entityId={product.id} />
           </div>
         </div>
       </div>

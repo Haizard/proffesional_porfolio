@@ -1,0 +1,3 @@
+- [New features schema](new-features-schema.md) — categories/projects/comments tables require SQL migration before any new feature routes work; migration file at schema-migration.sql
+- [Comment vote RPCs](comment-vote-rpcs.md) — vote counts use 3 Supabase RPC functions (increment/decrement/switch); must exist before comment voting works
+- [Projects API admin flag](projects-api-admin.md) — pass ?status=all to /api/projects to get unpublished; omit for public (published only)
