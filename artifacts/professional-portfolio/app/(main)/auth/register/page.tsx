@@ -1,68 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useActionState } from 'react'
 import Link from 'next/link'
-import { toast } from 'react-hot-toast'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Terminal, Mail } from 'lucide-react'
+import { Terminal, Mail, AlertCircle, Loader2 } from 'lucide-react'
+import { registerAction, type RegisterState } from './actions'
+
+const initial: RegisterState = { error: null, success: false, email: '' }
 
 export default function RegisterPage() {
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [registered, setRegistered] = useState(false)
-  const [redirect, setRedirect] = useState('/account')
+  const [state, formAction, isPending] = useActionState(registerAction, initial)
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    setRedirect(params.get('redirect') || '/account')
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!fullName.trim()) { toast.error('Full name is required.'); return }
-    if (!email.trim())    { toast.error('Email is required.'); return }
-    if (password.length < 6) { toast.error('Password must be at least 6 characters.'); return }
-
-    setIsLoading(true)
-    try {
-      const supabase = createClient()
-      if (!supabase) {
-        toast.error('Supabase is not configured. Check environment variables.')
-        return
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
-        },
-      })
-
-      if (error) { toast.error(error.message); return }
-
-      // Email confirmation disabled in Supabase → session exists immediately
-      if (data.session) {
-        toast.success('Account created. Welcome!')
-        window.location.href = redirect
-        return
-      }
-
-      // Email confirmation required
-      setRegistered(true)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (registered) {
+  if (state.success) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center py-24 px-4">
         <div className="w-full max-w-md bg-card border border-border p-8 rounded-sm shadow-2xl relative text-center">
@@ -72,16 +20,21 @@ export default function RegisterPage() {
               <Mail className="h-7 w-7 text-primary" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold mb-3 font-mono uppercase">Check_Your_Email</h1>
-          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-            We sent a confirmation link to{' '}
-            <span className="text-foreground font-mono">{email}</span>.
-            Click it to activate your account, then log in.
+          <h1 className="text-2xl font-bold mb-3 font-mono uppercase tracking-tight">
+            Check_Your_Email
+          </h1>
+          <p className="text-muted-foreground mb-2 text-sm leading-relaxed">
+            A confirmation link was sent to:
           </p>
-          <Link href="/auth/login">
-            <Button className="w-full font-mono bg-primary text-black hover:bg-primary/90">
-              GO_TO_LOGIN
-            </Button>
+          <p className="text-foreground font-mono text-sm mb-6 break-all">{state.email}</p>
+          <p className="text-muted-foreground text-xs mb-6">
+            Click the link in that email to activate your account, then log in here.
+          </p>
+          <Link
+            href="/auth/login"
+            className="inline-flex w-full h-10 items-center justify-center rounded-sm bg-primary px-4 text-sm font-mono font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            GO_TO_LOGIN
           </Link>
         </div>
       </div>
@@ -99,56 +52,69 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-center mb-2 font-mono uppercase">
+        <h1 className="text-2xl font-bold text-center mb-2 font-mono uppercase tracking-tight">
           New_Entity_Registration
         </h1>
         <p className="text-center text-muted-foreground mb-8 text-sm">
           Create credentials for the client portal.
         </p>
 
-        <form onSubmit={handleSubmit} method="post" className="space-y-4">
+        {state.error && (
+          <div className="mb-4 flex gap-2 items-start p-3 rounded-sm bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span className="font-mono">{state.error}</span>
+          </div>
+        )}
+
+        <form action={formAction} className="space-y-4">
+          <input type="hidden" name="redirect" value="/account" />
+
           <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name</Label>
-            <Input
+            <label htmlFor="full_name" className="text-sm font-medium">Full Name</label>
+            <input
               id="full_name"
+              name="full_name"
+              type="text"
               autoComplete="name"
-              value={fullName}
-              onChange={e => setFullName(e.target.value)}
-              className="bg-background/50 font-mono"
               required
+              className="flex h-10 w-full rounded-sm border border-input bg-background/50 px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <input
               id="email"
+              name="email"
               type="email"
               autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="bg-background/50 font-mono"
               required
+              className="flex h-10 w-full rounded-sm border border-input bg-background/50 px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <input
               id="password"
+              name="password"
               type="password"
               autoComplete="new-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="bg-background/50 font-mono"
               required
               minLength={6}
+              className="flex h-10 w-full rounded-sm border border-input bg-background/50 px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
-          <Button type="submit" className="w-full font-mono mt-4" disabled={isLoading}>
-            {isLoading ? 'INITIALIZING...' : 'CREATE_ACCOUNT'}
-          </Button>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full mt-4 h-10 px-4 py-2 inline-flex items-center justify-center rounded-sm text-sm font-mono font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+          >
+            {isPending ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> INITIALIZING...</>
+            ) : 'CREATE_ACCOUNT'}
+          </button>
         </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">

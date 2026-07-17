@@ -1,79 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useActionState } from 'react'
 import Link from 'next/link'
-import { toast } from 'react-hot-toast'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Terminal, AlertCircle } from 'lucide-react'
+import { Terminal, AlertCircle, Loader2 } from 'lucide-react'
+import { loginAction, type LoginState } from './actions'
+
+const initial: LoginState = { error: null }
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [showResend, setShowResend] = useState(false)
-  const [redirect, setRedirect] = useState('/account')
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    setRedirect(params.get('redirect') || '/account')
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!email.trim() || !password.trim()) {
-      toast.error('Email and password are required.')
-      return
-    }
-
-    setIsLoading(true)
-    setShowResend(false)
-
-    try {
-      const supabase = createClient()
-      if (!supabase) {
-        toast.error('Supabase is not configured. Check environment variables.')
-        return
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-      if (error) {
-        const msg = error.message.toLowerCase()
-        if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
-          setShowResend(true)
-          toast.error('Email not confirmed — check your inbox.')
-        } else if (msg.includes('invalid') || msg.includes('credentials')) {
-          toast.error('Wrong email or password.')
-        } else {
-          toast.error(error.message)
-        }
-        return
-      }
-
-      toast.success('Access granted.')
-      window.location.href = redirect
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const resendConfirmation = async () => {
-    const supabase = createClient()
-    if (!supabase) return
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
-      },
-    })
-    if (error) { toast.error(error.message); return }
-    toast.success('Confirmation email resent.')
-  }
+  const [state, formAction, isPending] = useActionState(loginAction, initial)
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-24 px-4">
@@ -86,57 +21,58 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-center mb-2 font-mono uppercase">System_Login</h1>
+        <h1 className="text-2xl font-bold text-center mb-2 font-mono uppercase tracking-tight">
+          System_Login
+        </h1>
         <p className="text-center text-muted-foreground mb-8 text-sm">
           Enter credentials to access client portal.
         </p>
 
-        <form onSubmit={handleSubmit} method="post" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="bg-background/50 font-mono"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="bg-background/50 font-mono"
-              required
-            />
-          </div>
-
-          <Button type="submit" className="w-full font-mono mt-4" disabled={isLoading}>
-            {isLoading ? 'AUTHENTICATING...' : 'ACCESS_SYSTEM'}
-          </Button>
-        </form>
-
-        {showResend && (
-          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-sm">
-            <p className="text-yellow-400 font-mono text-xs mb-1">EMAIL_NOT_CONFIRMED</p>
-            <p className="text-muted-foreground text-xs mb-2">
-              Check your inbox for the confirmation link, or resend it.
-            </p>
-            <button
-              onClick={resendConfirmation}
-              className="text-xs font-mono text-primary hover:text-primary/80 underline"
-            >
-              Resend confirmation email →
-            </button>
+        {state.error && (
+          <div className="mb-4 flex gap-2 items-start p-3 rounded-sm bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span className="font-mono">{state.error}</span>
           </div>
         )}
+
+        <form action={formAction} className="space-y-4">
+          {/* Pass redirect through the form so the server action can read it */}
+          <input type="hidden" name="redirect" value="/account" />
+
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="flex h-10 w-full rounded-sm border border-input bg-background/50 px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              className="flex h-10 w-full rounded-sm border border-input bg-background/50 px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full mt-4 h-10 px-4 py-2 inline-flex items-center justify-center rounded-sm text-sm font-mono font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+          >
+            {isPending ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> AUTHENTICATING...</>
+            ) : 'ACCESS_SYSTEM'}
+          </button>
+        </form>
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           No account?{' '}
